@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q&A Website</title>
+</head>
+<body>
+    <h1>Q&A Website</h1>
+    <form id="fileUploadForm" enctype="multipart/form-data">
+        <input type="file" id="file1" name="file1" accept=".txt">
+        <button type="submit">Upload File</button>
+    </form>
+    <br>
+    <form id="questionForm">
+        <input type="text" id="ques1" name="ques1" placeholder="Enter your question">
+        <button type="submit">Ask</button>
+    </form>
+    <br>
+    <textarea id="ans1" rows="5" cols="50" readonly></textarea>
+
+    <script src="../static/script.js"></script>
+</body>
+</html>
