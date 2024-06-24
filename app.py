@@ -1,6 +1,7 @@
 import os
 import openai
 from flask import Flask, request, jsonify, render_template
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
@@ -8,7 +9,7 @@ UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Load your OpenAI API key
-openai.api_key = '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'
+openai.api_key = os.getenv('API_KEY')
 
 def load_data(file_path):
     with open(file_path, 'r') as file:
