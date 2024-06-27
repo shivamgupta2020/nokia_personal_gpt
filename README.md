@@ -7,7 +7,7 @@ This project is a web application that answer questions based on uploaded text f
 1. Clone the repository:
    git clone [https://github.com/shivamgputa/your-repo-name.git](https://github.com/shivamgupta2020/nokia_personal_gpt.git)
 3. Install dependencies:
-   pip install flask openai
+   pip install -r requirements.txt
 4. Change API_KEY in .env file 
 5. Run the application:
    python app.py
