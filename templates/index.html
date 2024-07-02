@@ -1,23 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q&A Website</title>
+    <title>File Upload and Question</title>
 </head>
 <body>
-    <h1>Q&A Website</h1>
-    <form id="fileUploadForm" enctype="multipart/form-data">
-        <input type="file" id="file1" name="file1" accept=".txt">
+    <h1>PERSONAL BOT</h1>
+    <form id="fileUploadForm">
+        <input type="file" id="file1" name="file1">
         <button type="submit">Upload File</button>
     </form>
+
     <br>
+
     <form id="questionForm">
-        <input type="text" id="ques1" name="ques1" placeholder="Enter your question">
-        <button type="submit">Ask</button>
+        <select id="fileSelect">
+            <option value="">Select a file</option>
+        </select>
+        <input type="text" id="ques1" placeholder="Enter your question">
+        <button type="submit">Ask Question</button>
     </form>
+
     <br>
-    <textarea id="ans1" rows="5" cols="50" readonly></textarea>
+
+    <textarea id="ans1" rows="10" cols="50" placeholder="Answer will appear here"></textarea>
 
     <script src="../static/script.js"></script>
 </body>

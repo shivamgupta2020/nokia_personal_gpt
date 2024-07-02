@@ -4,6 +4,8 @@ import uuid
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 import pandas as pd
+import pdfplumber
+import json
 
 app = Flask(__name__)
 
@@ -14,6 +16,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 load_dotenv()
 openai.api_key = os.getenv('API_KEY')
 
+def clean_text(text):
+    return ''.join(c if c.isprintable() else ' ' for c in text)
+
 def load_data(file_path):
     if file_path.endswith('.txt'):
         with open(file_path, 'r') as file:
@@ -21,12 +26,18 @@ def load_data(file_path):
     elif file_path.endswith('.xlsx') or file_path.endswith('.xls') or file_path.endswith('.xlsb'):
         df = pd.read_excel(file_path)
         return df.to_string(index=False)
+    elif file_path.endswith('.pdf'):
+        text = ""
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() or ''
+        return clean_text(text)
     else:
         return ""
 
 def query_openai(data, question):
     messages = [
-        {"role": "system", "content": "You are an assistant. Use the context to answer the question accurately. If the information is not in the context, say 'I don't know.'"},
+        {"role": "system", "content": "You are an assistant who doesn't know anything except the data provided to you. Use the context to answer the question accurately. If the information is not in the context, say 'I don't know.'"},
         {"role": "system", "content": f"Context:\n{data}"},
         {"role": "user", "content": f"Q: {question}\nA:"}
     ]
@@ -62,24 +73,41 @@ def upload_file():
         unique_filename = f'{uuid.uuid4()}.{file_ext}'
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
-        # Save the path of the most recently uploaded file
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], 'latest_file.txt'), 'w') as f:
-            f.write(file_path)
+
+        # Save metadata about the uploaded file
+        metadata = {'filename': file.filename, 'file_path': file_path}
+        with open(os.path.join(app.config['UPLOAD_FOLDER'], 'files_metadata.json'), 'a') as f:
+            f.write(json.dumps(metadata) + '\n')
         return jsonify({'message': 'File uploaded successfully'})
+    
+@app.route('/files', methods=['GET'])
+def list_files():
+    files = []
+    metadata_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'files_metadata.json')
+    if os.path.exists(metadata_file_path):
+        with open(metadata_file_path, 'r') as f:
+            for line in f:
+                files.append(json.loads(line))
+    return jsonify(files)
 
 @app.route('/ask', methods=['POST'])
 def ask_question():
     question = request.json['question']
-    latest_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'latest_file.txt')
+    filename = request.json['filename']
     
-    if not os.path.exists(latest_file_path):
-        return jsonify({'answer': 'Please upload a file first.'}), 400
+    metadata_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'files_metadata.json')
+    file_path = None
     
-    with open(latest_file_path, 'r') as f:
-        file_path = f.read().strip()
+    if os.path.exists(metadata_file_path):
+        with open(metadata_file_path, 'r') as f:
+            for line in f:
+                file_metadata = json.loads(line)
+                if file_metadata['filename'] == filename:
+                    file_path = file_metadata['file_path']
+                    break
     
-    if not os.path.exists(file_path):
-        return jsonify({'answer': 'File not found. Please upload a file again.'}), 400
+    if not file_path or not os.path.exists(file_path):
+        return jsonify({'answer': 'File not found. Please upload the file again.'}), 400
     
     data = load_data(file_path)
     answer = get_answer(data, question)
