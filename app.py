@@ -51,11 +51,18 @@ def query_openai(data, question):
     answer = response.choices[0].message['content'].strip()
     return answer
 
-def get_answer(data, question):
+def get_answer(data, question, personal_file_path):
     answer = query_openai(data, question)
+    if "I don't know" in answer or not answer:
+        personal_data = load_data(personal_file_path)
+        answer = query_openai(personal_data, question)
     if "I don't know" in answer or not answer:
         return "I don't know"
     return answer
+
+def update_personal_file(question, answer, personal_file_path):
+    with open(personal_file_path, 'a') as file:
+        file.write(f'Q: {question}\nA: {answer}\n\n')
 
 @app.route('/')
 def index():
@@ -110,8 +117,19 @@ def ask_question():
         return jsonify({'answer': 'File not found. Please upload the file again.'}), 400
     
     data = load_data(file_path)
-    answer = get_answer(data, question)
+    personal_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'personal.txt')
+    answer = get_answer(data, question, personal_file_path)
+    if answer == "I don't know":
+        return jsonify({'answer': answer, 'options': ['Update details', 'Leave it']})
     return jsonify({'answer': answer})
+
+@app.route('/update_personal', methods=['POST'])
+def update_personal():
+    question = request.json['question']
+    answer = request.json['answer']
+    personal_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'personal.txt')
+    update_personal_file(question, answer, personal_file_path)
+    return jsonify({'message': 'personal.txt updated successfully'})
 
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

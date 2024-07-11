@@ -37,6 +37,41 @@ document.getElementById('questionForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         document.getElementById('ans1').value = data.answer;
+
+        if (data.options) {
+            document.getElementById('options').style.display = 'block';
+
+            document.getElementById('updateDetails').onclick = function() {
+                document.getElementById('updateSection').style.display = 'block';
+                document.getElementById('options').style.display = 'none';
+
+                document.getElementById('submitUpdate').onclick = function() {
+                    const newAnswer = document.getElementById('newAnswer').value;
+                    fetch('/update_personal', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question: question, answer: newAnswer }),
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        alert(result.message);
+                        document.getElementById('updateSection').style.display = 'none';
+                        document.getElementById('newAnswer').value = '';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                };
+            };
+
+            document.getElementById('leaveIt').onclick = function() {
+                document.getElementById('options').style.display = 'none';
+            };
+        } else {
+            document.getElementById('options').style.display = 'none';
+        }
     })
     .catch(error => {
         console.error('Error:', error);
