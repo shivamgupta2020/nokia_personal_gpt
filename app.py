@@ -44,9 +44,9 @@ def query_openai(data, question):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        max_tokens=150,
+        max_tokens=300,  # Adjust this value for longer answers
         n=1,
-        stop=["\n"]
+        stop=None
     )
     answer = response.choices[0].message['content'].strip()
     return answer
